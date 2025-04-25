@@ -3,9 +3,12 @@
 #include <iostream>
 #include <string>
 
-#include "symbolInfo.hpp"
-#include "Hash.hpp"
+#include "2105057_symbolInfo.hpp"
+#include "2105057_Hash.hpp"
 using namespace std;
+
+// Defined a function pointer 
+typedef uint64_t (*HashFunction)(string, uint64_t);
 
 class ScopeTable
 {
@@ -17,11 +20,14 @@ private:
 
     SymbolInfo **hashTable;
 
+    //hashFunc pointer is used to incorporate different hash func from command line
+    HashFunction hashFunc;
+
 public:
     ScopeTable *parentScope;
 
     // constructor
-    ScopeTable(int n, int scopeNum, ScopeTable *parentScope = nullptr)
+    ScopeTable(int n, int scopeNum,HashFunction hashFunc=&Hash::SDBMHash, ScopeTable *parentScope = nullptr)
     {
         // initialization of the hash table
         this->numOfBuckets = n;
@@ -36,6 +42,7 @@ public:
         }
 
         this->id = to_string(scopeNum);
+        this->hashFunc = hashFunc;
     }
 
     // destructor
@@ -59,10 +66,14 @@ public:
 
     int calculateBucketIndex(string name)
     {
-        uint64_t hash = Hash::SDBMHash(name, numOfBuckets);
-        int index = hash % this->numOfBuckets;
-        return index;
+        if (!this->hashFunc) {
+            cerr << "Error: hashFunc is null in calculateBucketIndex" << endl;
+            return 0; // Return a safe default index or handle error appropriately
+        }
+        uint64_t index = hashFunc(name, (uint64_t)numOfBuckets);
+        return static_cast<int>(index);
     }
+
 
     SymbolInfo *LookUp(string name, bool verbose = false)
     {
@@ -203,5 +214,28 @@ public:
             }
             cout << endl;
         }
+    }
+
+
+    // Function to get the collision ratio for a single scope
+    double getCollisionRatio(){
+        int nonEmptyBuckets = 0;
+        int totalInsertions = 0;
+
+        for (int i = 0; i<numOfBuckets;i++){
+            SymbolInfo* curr = hashTable[i];
+            if(curr != nullptr){
+                nonEmptyBuckets++;
+                int count = 0;
+                while(curr != nullptr){
+                    count++;
+                    curr = curr->next;
+                }
+                totalInsertions += count;
+            }
+        }
+
+        int collisions = totalInsertions - nonEmptyBuckets;
+        return static_cast<double>(collisions) / numOfBuckets;
     }
 };

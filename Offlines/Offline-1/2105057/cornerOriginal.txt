@@ -1,5 +1,5 @@
-11      
-I     
+11
+I        
 I car STRUCT INT n_doors BOOL is_electric STRING brand
 I car2 STRUCT INT n_doors BOOL is_electric STRING brand
 I car3 STRUCT INT n_doors BOOL is_electric STRING brand INT n_doors
@@ -52,5 +52,5 @@ P A
 P A 
 Q x
 Q   
-I car STRUCT INT n_doors BOOL is_electric STRING brand
+I bicycle4 UNION INT n_gears BOOL is_hydrolic_brake STRING brand
 

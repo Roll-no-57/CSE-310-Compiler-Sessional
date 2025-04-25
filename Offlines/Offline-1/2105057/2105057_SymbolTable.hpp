@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 
-#include "ScopeTable.hpp"
+#include "2105057_ScopeTable.hpp"
 
 using namespace std;
 
@@ -14,18 +14,23 @@ private:
     ScopeTable *currentScope;
     int numOfScope;
 
+    HashFunction hashFunc;
+
 public:
-    // constructor
-    SymbolTable(int n,bool verbose=false)
+    // Default hash function is SDBMHash
+    SymbolTable(int n, HashFunction hashFunc = &Hash::SDBMHash, bool verbose = false)
     {
         this->numOfBuckets = n;
+        this->hashFunc = hashFunc;
         this->currentScope = nullptr;
         this->numOfScope = 1;
+
         enterScope(verbose);
     }
+
     ~SymbolTable()
     {
-        delete currentScope;
+        endProgram();
     }
 
     void incrementNumOfScope()
@@ -37,7 +42,7 @@ public:
         return this->numOfScope;
     }
 
-    ScopeTable* getCurrentScope()
+    ScopeTable *getCurrentScope()
     {
         return currentScope;
     }
@@ -49,17 +54,20 @@ public:
         {
             incrementNumOfScope();
         }
-        ScopeTable *newScope = new ScopeTable(this->numOfBuckets,numOfScope, currentScope); // set current as parentScope
+        ScopeTable *newScope = new ScopeTable(this->numOfBuckets, this->numOfScope, this->hashFunc, this->currentScope); // set current as parentScope
 
         this->currentScope = newScope;
-        if(verbose) cout<<"\tScopeTable# "<<currentScope->getId()<<" created"<<endl;
+        if (verbose)
+            cout << "\tScopeTable# " << currentScope->getId() << " created" << endl;
     }
 
-    void exitScope(bool verbose = false,bool quit = false )
+
+    void exitScope(bool verbose = false, bool quit = false)
     {
-        if (currentScope->parentScope == nullptr  && !quit)
+        if (currentScope->parentScope == nullptr && !quit)
         {
-            if(verbose)cout<<"\tScopeTable# "<<currentScope->getId()<<"  cannot be removed"<<endl;
+            if (verbose)
+                cout << "\tScopeTable# " << currentScope->getId() << "  cannot be removed" << endl;
             return;
         }
         ScopeTable *temp = currentScope;
@@ -67,23 +75,26 @@ public:
         temp->parentScope = nullptr;
         string tempId = temp->getId();
         delete temp;
-        if(verbose) cout<<"\tScopeTable# "<<tempId<<" removed"<<endl;
-
+        if (verbose)
+            cout << "\tScopeTable# " << tempId << " removed" << endl;
     }
 
-    bool Insert(string name, string type,bool verbose = false)
+    bool Insert(string name, string type, bool verbose = false)
     {
-        bool success =  currentScope->Insert(name, type,verbose);
+        if(currentScope == nullptr){
+            cout<<"\tCannot Insert anymore . You have removed all Scope."<<endl;
+        }
+        bool success = currentScope->Insert(name, type, verbose);
         return success;
     }
 
-    bool Remove(string name,bool verbose = false)
+    bool Remove(string name, bool verbose = false)
     {
-        bool success = currentScope->Remove(name,verbose);
+        bool success = currentScope->Remove(name, verbose);
         return success;
     }
 
-    SymbolInfo *LookUp(string name,bool verbose = false)
+    SymbolInfo *LookUp(string name, bool verbose = false)
     {
         // first searches currentscope if not found then recursively searches the parentscope.
 
@@ -93,14 +104,15 @@ public:
         while (searchScope != nullptr)
         {
 
-            SymbolInfo *searchedSymbol = searchScope->LookUp(name,verbose);
+            SymbolInfo *searchedSymbol = searchScope->LookUp(name, verbose);
             if (searchedSymbol != nullptr)
             {
                 return searchedSymbol;
             }
             searchScope = searchScope->parentScope;
         }
-		if(verbose) cout<<"\t'"<<name<<"' not found in any of the ScopeTables"<<endl;
+        if (verbose)
+            cout << "\t'" << name << "' not found in any of the ScopeTables" << endl;
         return nullptr;
     }
 
@@ -108,12 +120,13 @@ public:
     {
         if (currentScope == nullptr)
         {
-            if(verbose) cout<<"\tNo ScopeTable exists"<<endl;
+            if (verbose)
+                cout << "\tNo ScopeTable exists" << endl;
             return false;
         }
         while (currentScope != nullptr)
         {
-            exitScope(verbose,true);
+            exitScope(verbose, true);
         }
         return true;
     }
@@ -133,5 +146,21 @@ public:
             curr = curr->parentScope;
             scopeCount++;
         }
+    }
+
+    double getMeanCollisionRatio()
+    {
+        double sum = 0.0;
+        double scopeCount = 0.0;
+
+        ScopeTable *curr = currentScope;
+        while (curr != nullptr)
+        {
+            sum += curr->getCollisionRatio();
+            scopeCount++;
+            curr = curr->parentScope;
+        }
+
+        return scopeCount > 0 ? sum / scopeCount : 0.0;
     }
 };

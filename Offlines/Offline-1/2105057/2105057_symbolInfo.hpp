@@ -43,21 +43,19 @@ public:
             keyword += cstr[i++];
         }
     
-        // Skip the space
         while (cstr[i] == ' ') i++;
     
         if (keyword == "FUNCTION") {
-            // Read tokens: first one might be return type
+
             string returnType = "", token = "";
             string args = "";
             bool firstArg = true;
-    
-            // Read return type
+
             while (cstr[i] != ' ' && cstr[i] != '\0') {
                 returnType += cstr[i++];
             }
     
-            // Skip space
+
             while (cstr[i] == ' ') i++;
     
             // Collect arguments if any
@@ -84,7 +82,7 @@ public:
             bool first = true;
     
             while (cstr[i] != '\0') {
-                // Read type
+
                 string fieldType = "";
                 while (cstr[i] != ' ' && cstr[i] != '\0') {
                     fieldType += cstr[i++];
@@ -92,7 +90,7 @@ public:
     
                 while (cstr[i] == ' ') i++;
     
-                // Read name
+
                 string fieldName = "";
                 while (cstr[i] != ' ' && cstr[i] != '\0') {
                     fieldName += cstr[i++];

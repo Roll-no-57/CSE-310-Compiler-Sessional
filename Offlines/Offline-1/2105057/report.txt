@@ -1,0 +1,7 @@
+HashFunction,Buckets,Count,CollisionRatio,InputFile
+DJB2Hash,100,1000,0.53,input.txt
+SDBMHash,100,1000,0.72,input.txt
+FNV1AHash,100,1000,0.426,input.txt
+SumHash,100,1000,0.72,input.txt
+SumHash,100,1000,0.72,short_strings.txt
+SDBMHash,100,1000,0.72,short_strings.txt
