@@ -13,12 +13,12 @@ private:
     int numOfBuckets;
     ScopeTable *currentScope;
     int numOfScope;
-
+    ostream& out;
     HashFunction hashFunc;
 
 public:
     // Default hash function is SDBMHash
-    SymbolTable(int n, HashFunction hashFunc = &Hash::SDBMHash, bool verbose = false)
+    SymbolTable(int n,HashFunction hashFunc = &Hash::SDBMHash, ostream& outfile = cout, bool verbose = false): out(outfile)
     {
         this->numOfBuckets = n;
         this->hashFunc = hashFunc;
@@ -54,11 +54,11 @@ public:
         {
             incrementNumOfScope();
         }
-        ScopeTable *newScope = new ScopeTable(this->numOfBuckets, this->numOfScope, this->hashFunc, this->currentScope); // set current as parentScope
+        ScopeTable *newScope = new ScopeTable(this->numOfBuckets, this->numOfScope, this->hashFunc, this->currentScope,this->out); // set current as parentScope
 
         this->currentScope = newScope;
         if (verbose)
-            cout << "\tScopeTable# " << currentScope->getId() << " created" << endl;
+            out << "\tScopeTable# " << currentScope->getId() << " created" << endl;
     }
 
 
@@ -67,7 +67,7 @@ public:
         if (currentScope->parentScope == nullptr && !quit)
         {
             if (verbose)
-                cout << "\tScopeTable# " << currentScope->getId() << "  cannot be removed" << endl;
+                out << "\tScopeTable# " << currentScope->getId() << "  cannot be removed" << endl;
             return;
         }
         ScopeTable *temp = currentScope;
@@ -76,13 +76,13 @@ public:
         string tempId = temp->getId();
         delete temp;
         if (verbose)
-            cout << "\tScopeTable# " << tempId << " removed" << endl;
+            out << "\tScopeTable# " << tempId << " removed" << endl;
     }
 
     bool Insert(string name, string type, bool verbose = false)
     {
         if(currentScope == nullptr){
-            cout<<"\tCannot Insert anymore . You have removed all Scope."<<endl;
+            out<<"\tCannot Insert anymore . You have removed all Scope."<<endl;
         }
         bool success = currentScope->Insert(name, type, verbose);
         return success;
@@ -112,7 +112,7 @@ public:
             searchScope = searchScope->parentScope;
         }
         if (verbose)
-            cout << "\t'" << name << "' not found in any of the ScopeTables" << endl;
+            out << "\t'" << name << "' not found in any of the ScopeTables" << endl;
         return nullptr;
     }
 
@@ -121,7 +121,7 @@ public:
         if (currentScope == nullptr)
         {
             if (verbose)
-                cout << "\tNo ScopeTable exists" << endl;
+                out << "\tNo ScopeTable exists" << endl;
             return false;
         }
         while (currentScope != nullptr)

@@ -1,0 +1,16 @@
+<INT>
+<LPAREN,(>
+<RPAREN,)>
+<LCURL,{>
+<FLOAT>
+<ASSIGNOP,=>
+<SEMICOLON,;>
+<IF>
+<LPAREN,(>
+<RELOP,>>
+<RPAREN,)>
+<LCURL,{>
+<INCOP,++>
+<SEMICOLON,;>
+<RCURL,}>
+<RCURL,}>
