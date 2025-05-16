@@ -29,7 +29,7 @@ public:
 
     ~SymbolTable()
     {
-        endProgram(true);
+        endProgram(false);
     }
 
     ScopeTable *getCurrentScope()
@@ -71,13 +71,15 @@ public:
             out << "\tScopeTable# " << tempId << " removed" << endl;
     }
 
-    bool Insert(string name, string type, bool verbose = false)
+    bool Insert(string name, string type,int& bucket, int& chainPos, bool verbose = false)
     {
         if(currentScope == nullptr){
             out<<"\tCannot Insert anymore . You have removed all Scope."<<endl;
+            bucket = -1;
+            chainPos = -1;
             return false;
         }
-        bool success = currentScope->Insert(name, type, verbose);
+        bool success = currentScope->Insert(name, type,bucket,chainPos, verbose);
         return success;
     }
 

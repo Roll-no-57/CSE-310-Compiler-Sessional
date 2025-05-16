@@ -605,7 +605,7 @@ public:
         this->lexeme = lexeme;
     }
     string to_string() {
-        return "<" + token + ", " + lexeme + "> ";
+        return "<" + token + ", " + lexeme + ">";
     }
 };
 
@@ -625,12 +625,17 @@ void process_keyword(string text) {
 
 // Writes token to token file
 void write_to_token_file(TokenLexeme tl) {
-    tokenout << tl.to_string();
+    tokenout << tl.to_string()<<" ";
 }
 
 // Writes token log
 void write_to_log_file(TokenLexeme tl) {
-    logout << "Line no " << line_count << ": Token <" << tl.token << "> Lexeme " << tl.lexeme << " found\n\n";
+	if(tl.token == "CONST_CHAR"){
+		logout << "Line no " << line_count << ": Token <" << tl.token << "> Lexeme " << current_const_char_text << " found --> "<<tl.to_string()<<"\n\n";
+	}
+	else{
+		logout << "Line no " << line_count << ": Token <" << tl.token << "> Lexeme " << tl.lexeme << " found\n\n";
+	}
 }
 
 // Handles general token processing
@@ -643,26 +648,40 @@ void process_token_lexeme(TokenLexeme tl) {
     } else if (tl.token == "RCURL") {
         ST->exitScope(false);
     }
-    if(tl.token == "ID" || tl.token =="CONST_INT" || tl.token =="CONST_FLOAT" ){
-        bool succ = ST->Insert(tl.lexeme,tl.token,false);
+
+
+// int bucket, chainPos;
+//         bool succ = ST->Insert(tl.lexeme, tl.token, bucket, chainPos, false);
+//         if (succ) {
+//             ST->printAllScopeTable();
+//             logout << "\n";
+//         } else {
+            // logout << "< " << tl.lexeme << " : " << tl.token << " > already exists in ScopeTable# "
+            //        << ST->getCurrentScope()->getId() << " at position " << (bucket + 1) << ", " << chainPos << "\n\n";
+//         }
+
+
+
+
+
+    if(tl.token == "ID" || tl.token =="CONST_INT" || tl.token =="CONST_FLOAT"||tl.token == "CONST_CHAR" ){
+		int bucket,chainPos;
+		bool succ;
+		if(tl.token == "CONST_CHAR"){
+			succ = ST->Insert(current_const_char_text,tl.token,bucket,chainPos,false);
+		}
+		else{
+			succ = ST->Insert(tl.lexeme,tl.token,bucket,chainPos,false);
+		}
         if(succ){
             ST->printAllScopeTable();
 			logout<<"\n";
         }
         else{
-            logout<<"Lexeme: "<<tl.lexeme<<" already exists in the table\n";
+            logout << "< " << tl.lexeme << " : " << tl.token << " > already exists in ScopeTable# "
+                   << ST->getCurrentScope()->getId() << " at position " << (bucket) << ", " << (chainPos-1) << "\n\n";
         }
     }
-	if(tl.token == "CONST_CHAR"){
-		bool succ = ST->Insert(current_const_char_text,tl.token,false);
-        if(succ){
-            ST->printAllScopeTable();
-			logout<<"\n";
-        }
-        else{
-            logout<<"Lexeme: "<<tl.lexeme<<" already exists in the table\n";
-        }
-	}
 	else{
 		return;
 	}
@@ -733,10 +752,10 @@ void process_slash_star_comment(){
 }
 
 
-#line 737 "2105057_flex.cpp"
+#line 756 "2105057_flex.cpp"
 /* SINGLE_QOUTE    "\'" */
 /* MULTICHAR_LITERAL		'[{NON_BACKSLASH}|{SPECIAL_CHARACTER}]{2,}'	 */
-#line 740 "2105057_flex.cpp"
+#line 759 "2105057_flex.cpp"
 
 #define INITIAL 0
 #define CONST_CHAR_LITERAL 1
@@ -957,10 +976,10 @@ YY_DECL
 		}
 
 	{
-#line 227 "2105057.l"
+#line 246 "2105057.l"
 
 
-#line 964 "2105057_flex.cpp"
+#line 983 "2105057_flex.cpp"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1019,113 +1038,113 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 229 "2105057.l"
+#line 248 "2105057.l"
 { /* ignore */ }
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 231 "2105057.l"
+#line 250 "2105057.l"
 { line_count++; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 233 "2105057.l"
+#line 252 "2105057.l"
 { process_keyword(yytext); }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 235 "2105057.l"
+#line 254 "2105057.l"
 { process_token_lexeme(TokenLexeme("ADDOP", yytext)); }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 236 "2105057.l"
+#line 255 "2105057.l"
 { process_token_lexeme(TokenLexeme("MULOP", yytext)); }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 237 "2105057.l"
+#line 256 "2105057.l"
 { process_token_lexeme(TokenLexeme("INCOP", yytext)); }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 238 "2105057.l"
+#line 257 "2105057.l"
 { process_token_lexeme(TokenLexeme("RELOP", yytext)); }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 239 "2105057.l"
+#line 258 "2105057.l"
 { process_token_lexeme(TokenLexeme("ASSIGNOP", yytext)); }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 240 "2105057.l"
+#line 259 "2105057.l"
 { process_token_lexeme(TokenLexeme("LOGICOP", yytext)); }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 241 "2105057.l"
+#line 260 "2105057.l"
 { process_token_lexeme(TokenLexeme("NOT", yytext)); }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 242 "2105057.l"
+#line 261 "2105057.l"
 { process_token_lexeme(TokenLexeme("LPAREN", yytext)); }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 243 "2105057.l"
+#line 262 "2105057.l"
 { process_token_lexeme(TokenLexeme("RPAREN", yytext)); }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 244 "2105057.l"
+#line 263 "2105057.l"
 { process_token_lexeme(TokenLexeme("LCURL", yytext)); }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 245 "2105057.l"
+#line 264 "2105057.l"
 { process_token_lexeme(TokenLexeme("RCURL", yytext)); }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 246 "2105057.l"
+#line 265 "2105057.l"
 { process_token_lexeme(TokenLexeme("LTHIRD", yytext)); }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 247 "2105057.l"
+#line 266 "2105057.l"
 { process_token_lexeme(TokenLexeme("RTHIRD", yytext)); }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 248 "2105057.l"
+#line 267 "2105057.l"
 { process_token_lexeme(TokenLexeme("COMMA", yytext)); }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 249 "2105057.l"
+#line 268 "2105057.l"
 { process_token_lexeme(TokenLexeme("SEMICOLON", yytext)); }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 250 "2105057.l"
+#line 269 "2105057.l"
 { process_token_lexeme(TokenLexeme("ID", yytext));}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 251 "2105057.l"
+#line 270 "2105057.l"
 { process_token_lexeme(TokenLexeme("CONST_INT", yytext));}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 252 "2105057.l"
+#line 271 "2105057.l"
 { process_token_lexeme(TokenLexeme("CONST_FLOAT", yytext));}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 254 "2105057.l"
+#line 273 "2105057.l"
 {
                     cout<<"before hello "<<current_const_char_text<<endl;
                     cout<<"before state yytext: "<<yytext<<endl;
@@ -1139,7 +1158,7 @@ YY_RULE_SETUP
 
 case 23:
 YY_RULE_SETUP
-#line 266 "2105057.l"
+#line 285 "2105057.l"
 {
                         cout<<"Inside state yytext: "<<yytext<<endl;
 						current_const_char_text += yytext;
@@ -1152,7 +1171,7 @@ YY_RULE_SETUP
 case 24:
 /* rule 24 can match eol */
 YY_RULE_SETUP
-#line 274 "2105057.l"
+#line 293 "2105057.l"
 {
 					print_error_message("UNFINISHED_CONST_CHAR",current_const_char_text);
 					cout<<"NewLIne error"<<endl;
@@ -1161,7 +1180,7 @@ YY_RULE_SETUP
 				}
 	YY_BREAK
 case YY_STATE_EOF(CONST_CHAR_LITERAL):
-#line 280 "2105057.l"
+#line 299 "2105057.l"
 {
 					print_error_message("UNFINISHED_CONST_CHAR",current_const_char_text);
 					cout<<"EOF error"<<endl;
@@ -1170,7 +1189,7 @@ case YY_STATE_EOF(CONST_CHAR_LITERAL):
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 285 "2105057.l"
+#line 304 "2105057.l"
 {
                             cout<<"special :"<<yytext<<endl;
 							current_const_char_text += yytext;
@@ -1181,7 +1200,7 @@ YY_RULE_SETUP
 case 26:
 /* rule 26 can match eol */
 YY_RULE_SETUP
-#line 291 "2105057.l"
+#line 310 "2105057.l"
 {
                             cout<<"Inside \\ non-back yytext: "<<yytext<<endl;
 							current_const_char_text += yytext;
@@ -1192,7 +1211,7 @@ YY_RULE_SETUP
 case 27:
 /* rule 27 can match eol */
 YY_RULE_SETUP
-#line 297 "2105057.l"
+#line 316 "2105057.l"
 {
                         cout<<"Inside non-back yytext: "<<yytext<<endl;
 						current_const_char_text += yytext;
@@ -1203,7 +1222,7 @@ YY_RULE_SETUP
 
 case 28:
 YY_RULE_SETUP
-#line 306 "2105057.l"
+#line 325 "2105057.l"
 {
 					current_string=yytext;
 					BEGIN STRING_LITERAL;
@@ -1212,7 +1231,7 @@ YY_RULE_SETUP
 
 case 29:
 YY_RULE_SETUP
-#line 313 "2105057.l"
+#line 332 "2105057.l"
 {
 						current_string+=yytext;
 						process_token_lexeme(TokenLexeme("STRING",current_string));
@@ -1222,7 +1241,7 @@ YY_RULE_SETUP
 case 30:
 /* rule 30 can match eol */
 YY_RULE_SETUP
-#line 318 "2105057.l"
+#line 337 "2105057.l"
 {
 						print_error_message("Unfinished string for new line :",current_string);
 						line_count++;
@@ -1230,7 +1249,7 @@ YY_RULE_SETUP
 					}
 	YY_BREAK
 case YY_STATE_EOF(STRING_LITERAL):
-#line 323 "2105057.l"
+#line 342 "2105057.l"
 {
 						print_error_message("Unfinished string for EOF :",current_string);
 						BEGIN INITIAL;
@@ -1238,7 +1257,7 @@ case YY_STATE_EOF(STRING_LITERAL):
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 327 "2105057.l"
+#line 346 "2105057.l"
 {
 						current_string+=get_special_character_ASCII(yytext);
 						cout<<"Special conversion "<< current_string<<endl;
@@ -1247,7 +1266,7 @@ YY_RULE_SETUP
 case 32:
 /* rule 32 can match eol */
 YY_RULE_SETUP
-#line 331 "2105057.l"
+#line 350 "2105057.l"
 {
 						current_string += yytext;
 						line_count++;
@@ -1255,7 +1274,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 335 "2105057.l"
+#line 354 "2105057.l"
 {
 						current_string+=yytext;
 					}
@@ -1263,7 +1282,7 @@ YY_RULE_SETUP
 
 case 34:
 YY_RULE_SETUP
-#line 340 "2105057.l"
+#line 359 "2105057.l"
 {
 					current_comment=yytext;
 					BEGIN DOUBLE_SLASH_COMMENT;
@@ -1273,7 +1292,7 @@ YY_RULE_SETUP
 case 35:
 /* rule 35 can match eol */
 YY_RULE_SETUP
-#line 347 "2105057.l"
+#line 366 "2105057.l"
 {
 					line_count++;
 					process_double_slash_comment();
@@ -1281,7 +1300,7 @@ YY_RULE_SETUP
 				}
 	YY_BREAK
 case YY_STATE_EOF(DOUBLE_SLASH_COMMENT):
-#line 352 "2105057.l"
+#line 371 "2105057.l"
 {
 					process_double_slash_comment();
 					BEGIN INITIAL;
@@ -1290,7 +1309,7 @@ case YY_STATE_EOF(DOUBLE_SLASH_COMMENT):
 case 36:
 /* rule 36 can match eol */
 YY_RULE_SETUP
-#line 356 "2105057.l"
+#line 375 "2105057.l"
 {
 								current_comment+=yytext;
 								line_count++;
@@ -1298,7 +1317,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 360 "2105057.l"
+#line 379 "2105057.l"
 {
 					current_comment+=yytext;
 
@@ -1307,7 +1326,7 @@ YY_RULE_SETUP
 
 case 38:
 YY_RULE_SETUP
-#line 366 "2105057.l"
+#line 385 "2105057.l"
 {
 					current_comment=yytext;
 					BEGIN SLASH_STAR_COMMENT;
@@ -1316,7 +1335,7 @@ YY_RULE_SETUP
 
 case 39:
 YY_RULE_SETUP
-#line 373 "2105057.l"
+#line 392 "2105057.l"
 {
 						current_comment+=yytext;
 						process_slash_star_comment();
@@ -1326,21 +1345,21 @@ YY_RULE_SETUP
 case 40:
 /* rule 40 can match eol */
 YY_RULE_SETUP
-#line 378 "2105057.l"
+#line 397 "2105057.l"
 {
 						current_comment+=yytext;
 						line_count++;
 					}
 	YY_BREAK
 case YY_STATE_EOF(SLASH_STAR_COMMENT):
-#line 382 "2105057.l"
+#line 401 "2105057.l"
 {
 						print_error_message("COMMENT UNFINISHED",current_comment);
 					}
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 385 "2105057.l"
+#line 404 "2105057.l"
 {
 						current_comment+=yytext;
 					}
@@ -1348,15 +1367,15 @@ YY_RULE_SETUP
 
 case 42:
 YY_RULE_SETUP
-#line 391 "2105057.l"
+#line 410 "2105057.l"
 { print_error_message("Unrecognized character", yytext); }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 393 "2105057.l"
+#line 412 "2105057.l"
 ECHO;
 	YY_BREAK
-#line 1360 "2105057_flex.cpp"
+#line 1379 "2105057_flex.cpp"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2361,7 +2380,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 393 "2105057.l"
+#line 412 "2105057.l"
 
 
 int main(int argc, char *argv[]) {
@@ -2378,6 +2397,9 @@ int main(int argc, char *argv[]) {
 
     yyin = fin;
     yylex();
+
+	ST->printAllScopeTable();
+	logout<<"\n";
 
     logout << "Total lines: " << line_count << endl;
 	logout << "Total errors: "<<error_count<<endl;

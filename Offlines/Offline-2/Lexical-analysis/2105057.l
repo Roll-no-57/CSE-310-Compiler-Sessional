@@ -47,7 +47,7 @@ public:
         this->lexeme = lexeme;
     }
     string to_string() {
-        return "<" + token + ", " + lexeme + "> ";
+        return "<" + token + ", " + lexeme + ">";
     }
 };
 
@@ -67,7 +67,7 @@ void process_keyword(string text) {
 
 // Writes token to token file
 void write_to_token_file(TokenLexeme tl) {
-    tokenout << tl.to_string();
+    tokenout << tl.to_string()<<" ";
 }
 
 // Writes token log
@@ -98,34 +98,32 @@ void process_token_lexeme(TokenLexeme tl) {
 //             ST->printAllScopeTable();
 //             logout << "\n";
 //         } else {
-//             logout << "< " << tl.lexeme << " : " << tl.token << " > already exists in ScopeTable# "
-//                    << ST->getCurrentScope()->getId() << " at position " << (bucket + 1) << ", " << chainPos << "\n\n";
+            // logout << "< " << tl.lexeme << " : " << tl.token << " > already exists in ScopeTable# "
+            //        << ST->getCurrentScope()->getId() << " at position " << (bucket + 1) << ", " << chainPos << "\n\n";
 //         }
 
 
 
 
 
-    if(tl.token == "ID" || tl.token =="CONST_INT" || tl.token =="CONST_FLOAT" ){
-        bool succ = ST->Insert(tl.lexeme,tl.token,false);
+    if(tl.token == "ID" || tl.token =="CONST_INT" || tl.token =="CONST_FLOAT"||tl.token == "CONST_CHAR" ){
+		int bucket,chainPos;
+		bool succ;
+		if(tl.token == "CONST_CHAR"){
+			succ = ST->Insert(current_const_char_text,tl.token,bucket,chainPos,false);
+		}
+		else{
+			succ = ST->Insert(tl.lexeme,tl.token,bucket,chainPos,false);
+		}
         if(succ){
             ST->printAllScopeTable();
 			logout<<"\n";
         }
         else{
-            logout<<"Lexeme: "<<tl.lexeme<<" already exists in the table\n";
+            logout << "< " << tl.lexeme << " : " << tl.token << " > already exists in ScopeTable# "
+                   << ST->getCurrentScope()->getId() << " at position " << (bucket) << ", " << (chainPos-1) << "\n\n";
         }
     }
-	if(tl.token == "CONST_CHAR"){
-		bool succ = ST->Insert(current_const_char_text,tl.token,false);
-        if(succ){
-            ST->printAllScopeTable();
-			logout<<"\n";
-        }
-        else{
-            logout<<"Lexeme: "<<tl.lexeme<<" already exists in the table\n";
-        }
-	}
 	else{
 		return;
 	}
@@ -427,6 +425,9 @@ int main(int argc, char *argv[]) {
 
     yyin = fin;
     yylex();
+
+	ST->printAllScopeTable();
+	logout<<"\n";
 
     logout << "Total lines: " << line_count << endl;
 	logout << "Total errors: "<<error_count<<endl;

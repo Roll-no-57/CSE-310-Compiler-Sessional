@@ -105,6 +105,7 @@ public:
             {
                 if (verbose)
                     out << "\t'" << name << "' found in ScopeTable# " << getId() << " at position " << (index + 1) << ", " << indexInChain << endl;
+                // chainPos = indexInChain;
                 return currentSymbol;
             }
             currentSymbol = currentSymbol->next;
@@ -114,18 +115,35 @@ public:
         return nullptr;
     }
 
-    bool Insert(string name, string type, bool verbose = false)
+
+    bool Insert(string name, string type,int& bucket, int& chainPos, bool verbose = false)
     {
 
+        int index = calculateBucketIndex(name);
+        bucket = index;
         SymbolInfo *existingSymbol = LookUp(name);
 
-        int index = calculateBucketIndex(name);
         int indexInChain = 1;
 
         if (existingSymbol != nullptr)
         {
-            if (verbose)
-                out << "\t'" << name << "' already exists in the current ScopeTable" << endl;
+            // Symbol exists, find its chain position
+            int indexInChain = 1;
+            SymbolInfo *current = hashTable[index];
+            while (current != nullptr)
+            {
+                if (current->get_name() == name)
+                {
+                    chainPos = indexInChain;
+                    if (verbose)
+                        out << "\t'" << name << "' already exists in ScopeTable# " << getId() << " at position " << (index + 1) << ", " << chainPos << endl;
+                    return false;
+                }
+                current = current->next;
+                indexInChain++;
+            }
+            // Should not reach here if LookUp found the symbol
+            chainPos = -1; // Safety default
             return false;
         }
         else
@@ -146,11 +164,16 @@ public:
                 {
                     nextInfo = nextInfo->next;
                     indexInChain++;
+
+
                 }
                 nextInfo->next = newSymbol;
                 indexInChain++;
+
             }
         }
+
+        chainPos = indexInChain;
 
         if (verbose)
             out << "\tInserted in ScopeTable# " << getId() << " at position " << (index + 1) << ", " << indexInChain << endl;
@@ -160,6 +183,7 @@ public:
     bool Remove(string name, bool verbose = false)
     {
         // first search if the symbol already exist if not then you can't delete
+
         SymbolInfo *existingSymbol = LookUp(name);
         int index = calculateBucketIndex(name);
         int indexInChain = 1;
