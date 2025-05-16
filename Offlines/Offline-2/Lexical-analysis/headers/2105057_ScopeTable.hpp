@@ -218,6 +218,23 @@ public:
         }
     }
 
+    void printSimpleScopeTable(int scopeCount){
+        out << "ScopeTable# " << this->id << endl;
+        for (int i = 0; i < numOfBuckets; i++)
+        {
+            SymbolInfo *curr = hashTable[i];
+            if(curr==nullptr)continue;
+            out << i + 1;
+            out << "--> ";
+            while (curr != nullptr)
+            {
+                out << "< " << curr->get_name() << " : " << curr->get_type() << " >";
+                curr = curr->next;
+            }
+            out << endl;
+        }
+    }
+
 
     // Function to get the collision ratio for a single scope
     double getCollisionRatio(){

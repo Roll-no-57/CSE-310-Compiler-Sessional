@@ -30,7 +30,7 @@ public:
 
     ~SymbolTable()
     {
-        endProgram();
+        endProgram(true);
     }
 
     void incrementNumOfScope()
@@ -142,7 +142,7 @@ public:
         int scopeCount = 1;
         while (curr != nullptr)
         {
-            curr->printScopeTable(scopeCount);
+            curr->printSimpleScopeTable(scopeCount);
             curr = curr->parentScope;
             scopeCount++;
         }

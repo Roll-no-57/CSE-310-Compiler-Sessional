@@ -1,13 +1,6 @@
-	ScopeTable# 1 created
 Line No. 1: Token <INT> Lexeme int found
 
-Error at line 1: Unrecognized character m
-
-Error at line 1: Unrecognized character a
-
-Error at line 1: Unrecognized character i
-
-Error at line 1: Unrecognized character n
+Line No. 1: Token <ID> Lexeme main found
 
 Line No. 1: Token <LPAREN> Lexeme ( found
 
@@ -15,48 +8,30 @@ Line No. 1: Token <RPAREN> Lexeme ) found
 
 Line No. 1: Token <LCURL> Lexeme { found
 
-	ScopeTable# 2 created
-Line No. 2: Token <FLOAT> Lexeme float found
-
-Error at line 2: Unrecognized character x
-
-Line No. 2: Token <ASSIGNOP> Lexeme = found
-
-Error at line 2: Unrecognized character 3
-
-Error at line 2: Unrecognized character .
-
-Error at line 2: Unrecognized character 1
-
-Error at line 2: Unrecognized character 4
+Line No. 2: Token <CONST_CHAR> Lexeme 
+ found
 
 Line No. 2: Token <SEMICOLON> Lexeme ; found
 
-Line No. 3: Token <IF> Lexeme if found
+Line No. 3: Token <CONST_CHAR> Lexeme 	 found
 
-Line No. 3: Token <LPAREN> Lexeme ( found
+Line No. 4: Token <CONST_CHAR> Lexeme a found
 
-Error at line 3: Unrecognized character x
+Error at line 5: UNRECOGNIZED_CHAR '\z'
 
-Line No. 3: Token <RELOP> Lexeme > found
+Error at line 6: UNFINISHED_CONST_CHAR 'a
 
-Error at line 3: Unrecognized character 0
+Line No. 7: Token <INT> Lexeme int found
 
-Line No. 3: Token <RPAREN> Lexeme ) found
+Line No. 7: Token <ID> Lexeme xx found
 
-Line No. 3: Token <LCURL> Lexeme { found
+Line No. 7: Token <ASSIGNOP> Lexeme = found
 
-	ScopeTable# 3 created
-Error at line 4: Unrecognized character x
+Line No. 7: Token <CONST_INT> Lexeme 56 found
 
-Line No. 4: Token <INCOP> Lexeme ++ found
+Line No. 7: Token <SEMICOLON> Lexeme ; found
 
-Line No. 4: Token <SEMICOLON> Lexeme ; found
+Line No. 8: Token <RCURL> Lexeme } found
 
-Line No. 5: Token <RCURL> Lexeme } found
-
-	ScopeTable# 3 removed
-Line No. 6: Token <RCURL> Lexeme } found
-
-	ScopeTable# 2 removed
-Total lines: 7
+Total lines: 9
+	ScopeTable# 1 removed

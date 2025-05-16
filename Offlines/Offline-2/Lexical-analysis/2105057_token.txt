@@ -1,16 +1,16 @@
 <INT>
+<ID,main>
 <LPAREN,(>
 <RPAREN,)>
 <LCURL,{>
-<FLOAT>
+<CONST_CHAR,
+>
+<SEMICOLON,;>
+<CONST_CHAR,	>
+<CONST_CHAR,a>
+<INT>
+<ID,xx>
 <ASSIGNOP,=>
+<CONST_INT,56>
 <SEMICOLON,;>
-<IF>
-<LPAREN,(>
-<RELOP,>>
-<RPAREN,)>
-<LCURL,{>
-<INCOP,++>
-<SEMICOLON,;>
-<RCURL,}>
 <RCURL,}>
