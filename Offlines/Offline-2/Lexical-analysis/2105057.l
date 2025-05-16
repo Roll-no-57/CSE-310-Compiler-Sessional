@@ -29,6 +29,7 @@ string current_converted_text = "";
 
 
 string current_string = "";
+string current_converted_string="";
 
 
 string current_comment = "";
@@ -74,6 +75,9 @@ void write_to_token_file(TokenLexeme tl) {
 void write_to_log_file(TokenLexeme tl) {
 	if(tl.token == "CONST_CHAR"){
 		logout << "Line no " << line_count << ": Token <" << tl.token << "> Lexeme " << current_const_char_text << " found --> "<<tl.to_string()<<"\n\n";
+	}
+	else if(tl.token == "STRING"){
+			logout << "Line no " << line_count << ": Token <" << tl.token << "> Lexeme " << current_string << " found --> "<<tl.to_string()<<"\n\n";
 	}
 	else{
 		logout << "Line no " << line_count << ": Token <" << tl.token << "> Lexeme " << tl.lexeme << " found\n\n";
@@ -149,6 +153,7 @@ char get_special_character_ASCII(string text)
 		case 't': ascii = '\t'; break;
 		case 'n': ascii = '\n'; break;
 		case '\"': ascii = '\"'; break;
+		case '\n': ascii = '\t'; break;
 		default : ascii = '#';          // this is a marker for wrongly formed special character
 	}
 	return ascii;
@@ -186,11 +191,11 @@ void handle_current_const_char()
 }
 
 void process_double_slash_comment(){
-	write_to_log_file(TokenLexeme("DOUBLE_SLASH_LINE_COMMENT",current_comment));
+	write_to_log_file(TokenLexeme("COMMENT",current_comment));
 }
 
 void process_slash_star_comment(){
-	write_to_log_file(TokenLexeme("SLASH_START_LINE_COMMENT",current_comment));
+	write_to_log_file(TokenLexeme("COMMENT",current_comment));
 }
 
 
@@ -233,7 +238,7 @@ CONST_INT       {DIGIT}+
 BACKSLASH				"\\"
 NON_BACKSLASH			[^\\]
 SINGLE_QUOTE			"\'"
-SPECIAL_CHARACTER	    "\\0"|"\\v"|"\\b"|"\\r"|"\\f"|"\\a"|"\\\'"|"\\\\"|"\\t"|"\\n"|"\""
+SPECIAL_CHARACTER	    "\\0"|"\\v"|"\\b"|"\\r"|"\\f"|"\\a"|"\\\'"|"\\\\"|"\\t"|"\\n"|"\\\""
 
 /* MULTICHAR_LITERAL		'[{NON_BACKSLASH}|{SPECIAL_CHARACTER}]{2,}'	 */
 
@@ -242,6 +247,8 @@ DOUBLE_QUOTE			"\""
 DOUBLE_SLASH	"\/\/"
 SLASH_STAR		"\/\*"
 STAR_SLASH		"\*\/"
+
+TOO_MANY_DECIMAL_POINTS {DIGIT}+("."{DIGIT}+)+("."{DIGIT}+)+
 
 %%
 
@@ -270,60 +277,63 @@ STAR_SLASH		"\*\/"
 {CONST_INT}     { process_token_lexeme(TokenLexeme("CONST_INT", yytext));}
 {CONST_FLOAT}   { process_token_lexeme(TokenLexeme("CONST_FLOAT", yytext));}
 
+{TOO_MANY_DECIMAL_POINTS} { print_error_message("TOO_MANY_DECIMAL_POINTS", yytext); }
+
 {SINGLE_QUOTE}	{
-                    cout<<"before hello "<<current_const_char_text<<endl;
-                    cout<<"before state yytext: "<<yytext<<endl;
+                    // cout<<"before hello "<<current_const_char_text<<endl;
+                    // cout<<"before state yytext: "<<yytext<<endl;
 					BEGIN CONST_CHAR_LITERAL;
 					current_const_char_text = yytext;
 					current_converted_text = yytext;
-                    cout<<"after state: "<<current_const_char_text<<endl;
-                    cout<<"after state yytext: "<<yytext<<endl;
+                    // cout<<"after state: "<<current_const_char_text<<endl;
+                    // cout<<"after state yytext: "<<yytext<<endl;
 				} 
 
 <CONST_CHAR_LITERAL>{
 
 	{SINGLE_QUOTE}	{
-                        cout<<"Inside state yytext: "<<yytext<<endl;
+                        /* cout<<"Inside state yytext: "<<yytext<<endl; */
 						current_const_char_text += yytext;
 						current_converted_text += yytext;
-                        cout<<"Inside state: "<<current_const_char_text<<endl;
+                        /* cout<<"Inside state: "<<current_const_char_text<<endl; */
 						handle_current_const_char();
 						BEGIN INITIAL;			// end this state
 					}
 	{NEWLINE}	{
 					print_error_message("UNFINISHED_CONST_CHAR",current_const_char_text);
-					cout<<"NewLIne error"<<endl;
+					/* cout<<"NewLIne error"<<endl; */
 					line_count++;
 					BEGIN INITIAL;
 				}
 	<<EOF>>		{
 					print_error_message("UNFINISHED_CONST_CHAR",current_const_char_text);
-					cout<<"EOF error"<<endl;
+					/* cout<<"EOF error"<<endl; */
 					BEGIN INITIAL;
 				}
 	{SPECIAL_CHARACTER}	{
-                            cout<<"special :"<<yytext<<endl;
+                            /* cout<<"special :"<<yytext<<endl; */
 							current_const_char_text += yytext;
 							current_converted_text += get_special_character_ASCII(yytext);
-                            cout<<"special converted "<<current_converted_text<<endl;
+                            /* cout<<"special converted "<<current_converted_text<<endl; */
 						}
 	{BACKSLASH}{NON_BACKSLASH}	{
-                            cout<<"Inside \\ non-back yytext: "<<yytext<<endl;
+                            /* cout<<"Inside \\ non-back yytext: "<<yytext<<endl; */
 							current_const_char_text += yytext;
 							current_converted_text += get_special_character_ASCII(yytext);
-                            cout<<"Inside \\ non-back current_const_char: "<<current_const_char_text<<endl;
+                            /* cout<<"Inside \\ non-back current_const_char: "<<current_const_char_text<<endl; */
 						}
 	{NON_BACKSLASH}	{
-                        cout<<"Inside non-back yytext: "<<yytext<<endl;
+                        /* cout<<"Inside non-back yytext: "<<yytext<<endl; */
 						current_const_char_text += yytext;
 						current_converted_text += yytext;
-                        cout<<"Inside non-back current_const_char: "<<current_const_char_text<<endl;
+                        /* cout<<"Inside non-back current_const_char: "<<current_const_char_text<<endl; */
 					}
 }
 
 
 {DOUBLE_QUOTE}  {
 					current_string=yytext;
+					current_converted_string="";
 					BEGIN STRING_LITERAL;
 				}
 
@@ -331,9 +341,10 @@ STAR_SLASH		"\*\/"
 
 	{DOUBLE_QUOTE}	{
 						current_string+=yytext;
-						process_token_lexeme(TokenLexeme("STRING",current_string));
+						process_token_lexeme(TokenLexeme("STRING",current_converted_string));
 						BEGIN INITIAL;
 					}
+					
 	{NEWLINE}		{
 						print_error_message("Unfinished string for new line :",current_string);
 						line_count++;
@@ -344,15 +355,19 @@ STAR_SLASH		"\*\/"
 						BEGIN INITIAL;
 					}
 	{SPECIAL_CHARACTER}	{
-						current_string+=get_special_character_ASCII(yytext);
+						current_string+=yytext;
+						current_converted_string+=get_special_character_ASCII(yytext);
 						cout<<"Special conversion "<< current_string<<endl;
 					}
 	{BACKSLASH}{NEWLINE}			{
 						current_string += yytext;
+						current_converted_string+=get_special_character_ASCII(yytext);
 						line_count++;
 					}
+
 	.				{
 						current_string+=yytext;
+						current_converted_string+=yytext;
 					}
 }
 
@@ -364,8 +379,8 @@ STAR_SLASH		"\*\/"
 <DOUBLE_SLASH_COMMENT>{
 
 	{NEWLINE}	{
-					line_count++;
 					process_double_slash_comment();
+					line_count++;
 					BEGIN INITIAL;
 				}
 	<<EOF>>		{
