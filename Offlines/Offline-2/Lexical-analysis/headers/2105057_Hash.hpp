@@ -24,6 +24,11 @@ public:
     //     return hash % num_buckets;
     // }
 
+    /*
+    sdf
+    
+    */
+
     static uint64_t SDBMHash(string str, uint64_t num_buckets)
     {
         unsigned int hash = 0;

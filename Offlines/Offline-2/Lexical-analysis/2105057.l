@@ -21,7 +21,13 @@ ofstream tokenout("2105057_token.txt");
 ofstream logout("2105057_log.txt");
 
 int line_count = 1;
+int old_line_count =1;
 int error_count = 0;
+
+
+void setOldLine(int line){
+	old_line_count = line;
+}
 
 
 string current_const_char_text = "";  // stores the contents of yytext while in TOKENIZING_CONST_CHAR state
@@ -162,7 +168,8 @@ char get_special_character_ASCII(string text)
 // Prints lexical error messages
 void print_error_message(string name, string message) {
 	error_count++;
-    logout << "Error at line " << line_count << ": " << name << " " << message << "\n\n";
+    logout << "Error at line no " << old_line_count << ": " << name << " " << message << "\n\n\n";
+	setOldLine(line_count);
 }
 
 void handle_current_const_char()
@@ -170,18 +177,18 @@ void handle_current_const_char()
 	int len = current_converted_text.length();
 	if(len == 2)
 	{
-		print_error_message("EMPTY_CONST_CHAR", current_const_char_text);
+		print_error_message("Empty character constant error", current_const_char_text);
 	}
 	else if(len > 3)
 	{
-        print_error_message("MULTICHAR_CONST_CHAR", current_const_char_text);
+        print_error_message("Multi character constant error", current_const_char_text);
 	}
 	else 
 	{
 		char ch = current_converted_text[1];
 		if(ch == '#')
 		{
-            print_error_message("UNRECOGNIZED_CHAR",current_const_char_text);
+            print_error_message("Unrecognized character",current_const_char_text);
 		}
 		else
 		{
@@ -250,11 +257,14 @@ STAR_SLASH		"\*\/"
 
 TOO_MANY_DECIMAL_POINTS {DIGIT}+("."{DIGIT}+)+("."{DIGIT}+)+
 
+ILL_FORMED_NUMBER {DIGIT}+[Ee][+-]?{DIGIT}*\.{DIGIT}+
+INVALID_SUFFIX {DIGIT}+[a-zA-Z_]+
+
 %%
 
 {WHITESPACE}    { /* ignore */ }
 
-{NEWLINE}       { line_count++; }
+{NEWLINE}       { line_count++; setOldLine(line_count);}
 
 {KEYWORD}       { process_keyword(yytext); }
 
@@ -277,12 +287,15 @@ TOO_MANY_DECIMAL_POINTS {DIGIT}+("."{DIGIT}+)+("."{DIGIT}+)+
 {CONST_INT}     { process_token_lexeme(TokenLexeme("CONST_INT", yytext));}
 {CONST_FLOAT}   { process_token_lexeme(TokenLexeme("CONST_FLOAT", yytext));}
 
-{TOO_MANY_DECIMAL_POINTS} { print_error_message("TOO_MANY_DECIMAL_POINTS", yytext); }
+{TOO_MANY_DECIMAL_POINTS} { print_error_message("Too many decimal points", yytext); }
+{ILL_FORMED_NUMBER} { print_error_message("Ill formed number", yytext); }
+{INVALID_SUFFIX} { print_error_message("Invalid prefix on ID or invalid suffix on Number", yytext); }
 
 {SINGLE_QUOTE}	{
                     // cout<<"before hello "<<current_const_char_text<<endl;
                     // cout<<"before state yytext: "<<yytext<<endl;
 					BEGIN CONST_CHAR_LITERAL;
+					setOldLine(line_count);
 					current_const_char_text = yytext;
 					current_converted_text = yytext;
                     // cout<<"after state: "<<current_const_char_text<<endl;
@@ -297,17 +310,20 @@ TOO_MANY_DECIMAL_POINTS {DIGIT}+("."{DIGIT}+)+("."{DIGIT}+)+
 						current_converted_text += yytext;
                         /* cout<<"Inside state: "<<current_const_char_text<<endl; */
 						handle_current_const_char();
+						setOldLine(line_count);
 						BEGIN INITIAL;			// end this state
 					}
 	{NEWLINE}	{
-					print_error_message("UNFINISHED_CONST_CHAR",current_const_char_text);
+					print_error_message("Unterminated character",current_const_char_text);
 					/* cout<<"NewLIne error"<<endl; */
 					line_count++;
+					setOldLine(line_count);
 					BEGIN INITIAL;
 				}
 	<<EOF>>		{
-					print_error_message("UNFINISHED_CONST_CHAR",current_const_char_text);
+					print_error_message("Unterminated character",current_const_char_text);
 					/* cout<<"EOF error"<<endl; */
+					setOldLine(line_count);
 					BEGIN INITIAL;
 				}
 	{SPECIAL_CHARACTER}	{
@@ -334,6 +350,7 @@ TOO_MANY_DECIMAL_POINTS {DIGIT}+("."{DIGIT}+)+("."{DIGIT}+)+
 {DOUBLE_QUOTE}  {
 					current_string=yytext;
 					current_converted_string="";
+					setOldLine(line_count);
 					BEGIN STRING_LITERAL;
 				}
 
@@ -342,22 +359,26 @@ TOO_MANY_DECIMAL_POINTS {DIGIT}+("."{DIGIT}+)+("."{DIGIT}+)+
 	{DOUBLE_QUOTE}	{
 						current_string+=yytext;
 						process_token_lexeme(TokenLexeme("STRING",current_converted_string));
+						setOldLine(line_count);
 						BEGIN INITIAL;
 					}
 					
 	{NEWLINE}		{
-						print_error_message("Unfinished string for new line :",current_string);
+
+						print_error_message("Unterminated string",current_string);
 						line_count++;
+						setOldLine(line_count);
 						BEGIN INITIAL;
 					}
 	<<EOF>>			{
-						print_error_message("Unfinished string for EOF :",current_string);
+						print_error_message("Unterminated string",current_string);
+						setOldLine(line_count);
 						BEGIN INITIAL;
 					}
 	{SPECIAL_CHARACTER}	{
 						current_string+=yytext;
 						current_converted_string+=get_special_character_ASCII(yytext);
-						cout<<"Special conversion "<< current_string<<endl;
+						/* cout<<"Special conversion "<< current_string<<endl; */
 					}
 	{BACKSLASH}{NEWLINE}			{
 						current_string += yytext;
@@ -373,6 +394,7 @@ TOO_MANY_DECIMAL_POINTS {DIGIT}+("."{DIGIT}+)+("."{DIGIT}+)+
 
 {DOUBLE_SLASH}	{
 					current_comment=yytext;
+					setOldLine(line_count);
 					BEGIN DOUBLE_SLASH_COMMENT;
 				}
 
@@ -381,10 +403,12 @@ TOO_MANY_DECIMAL_POINTS {DIGIT}+("."{DIGIT}+)+("."{DIGIT}+)+
 	{NEWLINE}	{
 					process_double_slash_comment();
 					line_count++;
+					setOldLine(line_count);
 					BEGIN INITIAL;
 				}
 	<<EOF>>		{
 					process_double_slash_comment();
+					setOldLine(line_count);
 					BEGIN INITIAL;
 				}
 	{BACKSLASH}{NEWLINE}	{
@@ -399,6 +423,7 @@ TOO_MANY_DECIMAL_POINTS {DIGIT}+("."{DIGIT}+)+("."{DIGIT}+)+
 
 {SLASH_STAR}	{
 					current_comment=yytext;
+					setOldLine(line_count);
 					BEGIN SLASH_STAR_COMMENT;
 				}
 
@@ -407,6 +432,7 @@ TOO_MANY_DECIMAL_POINTS {DIGIT}+("."{DIGIT}+)+("."{DIGIT}+)+
 	{STAR_SLASH}	{
 						current_comment+=yytext;
 						process_slash_star_comment();
+						setOldLine(line_count);
 						BEGIN INITIAL;
 					}
 	{NEWLINE}		{
@@ -414,7 +440,9 @@ TOO_MANY_DECIMAL_POINTS {DIGIT}+("."{DIGIT}+)+("."{DIGIT}+)+
 						line_count++;
 					}
 	<<EOF>>			{
-						print_error_message("COMMENT UNFINISHED",current_comment);
+						print_error_message("Unterminated comment",current_comment);
+						setOldLine(line_count);
+						BEGIN INITIAL;
 					}
 	.				{
 						current_comment+=yytext;
