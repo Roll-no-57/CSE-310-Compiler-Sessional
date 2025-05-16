@@ -12,7 +12,7 @@ class SymbolTable
 private:
     int numOfBuckets;
     ScopeTable *currentScope;
-    int numOfScope;
+
     ostream& out;
     HashFunction hashFunc;
 
@@ -23,7 +23,6 @@ public:
         this->numOfBuckets = n;
         this->hashFunc = hashFunc;
         this->currentScope = nullptr;
-        this->numOfScope = 1;
 
         enterScope(verbose);
     }
@@ -33,15 +32,6 @@ public:
         endProgram(true);
     }
 
-    void incrementNumOfScope()
-    {
-        this->numOfScope++;
-    }
-    int getNumOfScope()
-    {
-        return this->numOfScope;
-    }
-
     ScopeTable *getCurrentScope()
     {
         return currentScope;
@@ -49,18 +39,20 @@ public:
 
     void enterScope(bool verbose = false)
     {
-
+        int childNum = 1; // Default childNum for the first scope
+        
         if (currentScope != nullptr)
         {
-            incrementNumOfScope();
+            currentScope->incrementChildCount();
+            childNum = currentScope->getChildCount();
         }
-        ScopeTable *newScope = new ScopeTable(this->numOfBuckets, this->numOfScope, this->hashFunc, this->currentScope,this->out); // set current as parentScope
-
+        
+        ScopeTable *newScope = new ScopeTable(this->numOfBuckets, childNum, this->hashFunc, this->currentScope, this->out);
+        
         this->currentScope = newScope;
         if (verbose)
             out << "\tScopeTable# " << currentScope->getId() << " created" << endl;
     }
-
 
     void exitScope(bool verbose = false, bool quit = false)
     {
@@ -83,6 +75,7 @@ public:
     {
         if(currentScope == nullptr){
             out<<"\tCannot Insert anymore . You have removed all Scope."<<endl;
+            return false;
         }
         bool success = currentScope->Insert(name, type, verbose);
         return success;
@@ -90,6 +83,10 @@ public:
 
     bool Remove(string name, bool verbose = false)
     {
+        if(currentScope == nullptr){
+            out<<"\tCannot Insert anymore . You have removed all Scope."<<endl;
+            return false;
+        }
         bool success = currentScope->Remove(name, verbose);
         return success;
     }
@@ -142,7 +139,7 @@ public:
         int scopeCount = 1;
         while (curr != nullptr)
         {
-            curr->printSimpleScopeTable(scopeCount);
+            curr->printSimpleScopeTable();
             curr = curr->parentScope;
             scopeCount++;
         }

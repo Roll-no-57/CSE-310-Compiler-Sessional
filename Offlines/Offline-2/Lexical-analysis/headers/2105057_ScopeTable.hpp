@@ -17,6 +17,8 @@ private:
     int numOfBuckets;
     // attributes for scope table identification
     string id;
+    int childCount;
+    int childNum;
 
     SymbolInfo **hashTable;
 
@@ -29,7 +31,7 @@ public:
     ScopeTable *parentScope;
 
     // constructor
-    ScopeTable(int n, int scopeNum,HashFunction hashFunc=&Hash::SDBMHash, ScopeTable *parentScope = nullptr,ostream& outFile = cout):out(outFile)
+    ScopeTable(int n, int childNum,HashFunction hashFunc=&Hash::SDBMHash, ScopeTable *parentScope = nullptr,ostream& outFile = cout):out(outFile)
     {
         // initialization of the hash table
         this->numOfBuckets = n;
@@ -37,13 +39,19 @@ public:
         this->parentScope = parentScope;
 
         this->hashTable = new SymbolInfo *[numOfBuckets];
+        this->childNum=childNum;
 
         for (int i = 0; i < numOfBuckets; i++)
         {
             hashTable[i] = nullptr;
         }
-
-        this->id = to_string(scopeNum);
+        if(this->parentScope == nullptr){
+            this->id="1";
+        }
+        else{
+            this->id = parentScope->getId()+"."+to_string(childNum);
+        }
+        this->childCount=0;
         this->hashFunc = hashFunc;
     }
 
@@ -65,7 +73,15 @@ public:
     {
         return id;
     }
-
+    int getChildNum(){
+        return childNum;
+    }
+    void incrementChildCount(){
+        childCount++;
+    }
+    int getChildCount(){
+        return childCount;
+    }
     int calculateBucketIndex(string name)
     {
         if (!this->hashFunc) {
@@ -218,16 +234,13 @@ public:
         }
     }
 
-    void printSimpleScopeTable(int scopeCount){
-        out << "ScopeTable# " << this->id << endl;
-        for (int i = 0; i < numOfBuckets; i++)
-        {
+    void printSimpleScopeTable() {
+        out << "ScopeTable # " << id << endl;
+        for (int i = 0; i < numOfBuckets; i++) {
             SymbolInfo *curr = hashTable[i];
-            if(curr==nullptr)continue;
-            out << i + 1;
-            out << "--> ";
-            while (curr != nullptr)
-            {
+            if (curr==nullptr) continue;
+            out << i << " --> ";
+            while (curr) {
                 out << "< " << curr->get_name() << " : " << curr->get_type() << " >";
                 curr = curr->next;
             }

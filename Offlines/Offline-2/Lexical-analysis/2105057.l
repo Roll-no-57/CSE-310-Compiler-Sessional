@@ -1,5 +1,8 @@
 %option noyywrap
 %x CONST_CHAR_LITERAL
+%x STRING_LITERAL
+%x DOUBLE_SLASH_COMMENT
+%x SLASH_STAR_COMMENT
 
 
 %{
@@ -18,10 +21,17 @@ ofstream tokenout("2105057_token.txt");
 ofstream logout("2105057_log.txt");
 
 int line_count = 1;
+int error_count = 0;
 
 
 string current_const_char_text = "";  // stores the contents of yytext while in TOKENIZING_CONST_CHAR state
 string current_converted_text = "";
+
+
+string current_string = "";
+
+
+string current_comment = "";
 
 // Symbol table initialization
 int num_of_buckets = 7;
@@ -37,7 +47,7 @@ public:
         this->lexeme = lexeme;
     }
     string to_string() {
-        return "<" + token + "," + lexeme + ">";
+        return "<" + token + ", " + lexeme + "> ";
     }
 };
 
@@ -51,18 +61,23 @@ void process_keyword(string text) {
     string token = text;
     capitalize_letters(token);
 
-    tokenout << "<" << token << ">\n";
-    logout << "Line No. " << line_count << ": Token <" << token << "> Lexeme " << text << " found\n\n";
+    tokenout << "<" << token << "> ";
+    logout << "Line no " << line_count << ": Token <" << token << "> Lexeme " << text << " found\n\n";
 }
 
 // Writes token to token file
 void write_to_token_file(TokenLexeme tl) {
-    tokenout << tl.to_string() << "\n";
+    tokenout << tl.to_string();
 }
 
 // Writes token log
 void write_to_log_file(TokenLexeme tl) {
-    logout << "Line No. " << line_count << ": Token <" << tl.token << "> Lexeme " << tl.lexeme << " found\n\n";
+	if(tl.token == "CONST_CHAR"){
+		logout << "Line no " << line_count << ": Token <" << tl.token << "> Lexeme " << current_const_char_text << " found --> "<<tl.to_string()<<"\n\n";
+	}
+	else{
+		logout << "Line no " << line_count << ": Token <" << tl.token << "> Lexeme " << tl.lexeme << " found\n\n";
+	}
 }
 
 // Handles general token processing
@@ -75,15 +90,45 @@ void process_token_lexeme(TokenLexeme tl) {
     } else if (tl.token == "RCURL") {
         ST->exitScope(false);
     }
-    else if(tl.token == "ID" || "CONST_INT" || "CONST_FLOAT"){
+
+
+// int bucket, chainPos;
+//         bool succ = ST->Insert(tl.lexeme, tl.token, bucket, chainPos, false);
+//         if (succ) {
+//             ST->printAllScopeTable();
+//             logout << "\n";
+//         } else {
+//             logout << "< " << tl.lexeme << " : " << tl.token << " > already exists in ScopeTable# "
+//                    << ST->getCurrentScope()->getId() << " at position " << (bucket + 1) << ", " << chainPos << "\n\n";
+//         }
+
+
+
+
+
+    if(tl.token == "ID" || tl.token =="CONST_INT" || tl.token =="CONST_FLOAT" ){
         bool succ = ST->Insert(tl.lexeme,tl.token,false);
         if(succ){
-            // ST->printAllScopeTable();
+            ST->printAllScopeTable();
+			logout<<"\n";
         }
         else{
-            // logout<<"Lexeme: "<<tl.lexeme<<" already exists in the table\n";
+            logout<<"Lexeme: "<<tl.lexeme<<" already exists in the table\n";
         }
     }
+	if(tl.token == "CONST_CHAR"){
+		bool succ = ST->Insert(current_const_char_text,tl.token,false);
+        if(succ){
+            ST->printAllScopeTable();
+			logout<<"\n";
+        }
+        else{
+            logout<<"Lexeme: "<<tl.lexeme<<" already exists in the table\n";
+        }
+	}
+	else{
+		return;
+	}
 
 }
 
@@ -113,6 +158,7 @@ char get_special_character_ASCII(string text)
 
 // Prints lexical error messages
 void print_error_message(string name, string message) {
+	error_count++;
     logout << "Error at line " << line_count << ": " << name << " " << message << "\n\n";
 }
 
@@ -139,6 +185,14 @@ void handle_current_const_char()
             process_token_lexeme(TokenLexeme("CONST_CHAR",string(1,current_converted_text[1])));
 		}
 	}
+}
+
+void process_double_slash_comment(){
+	write_to_log_file(TokenLexeme("DOUBLE_SLASH_LINE_COMMENT",current_comment));
+}
+
+void process_slash_star_comment(){
+	write_to_log_file(TokenLexeme("SLASH_START_LINE_COMMENT",current_comment));
 }
 
 
@@ -181,11 +235,15 @@ CONST_INT       {DIGIT}+
 BACKSLASH				"\\"
 NON_BACKSLASH			[^\\]
 SINGLE_QUOTE			"\'"
-SPECIAL_CHARACTER	    "\\0"|"\\v"|"\\b"|"\\r"|"\\f"|"\\a"|"\\\'"|"\\\\"|"\\t"|"\\n"|"\\\""
+SPECIAL_CHARACTER	    "\\0"|"\\v"|"\\b"|"\\r"|"\\f"|"\\a"|"\\\'"|"\\\\"|"\\t"|"\\n"|"\""
+
+/* MULTICHAR_LITERAL		'[{NON_BACKSLASH}|{SPECIAL_CHARACTER}]{2,}'	 */
+
 DOUBLE_QUOTE			"\""
 
-MULTICHAR_LITERAL		'[{NON_BACKSLASH}|{SPECIAL_CHARACTER}]{2,}'	
-
+DOUBLE_SLASH	"\/\/"
+SLASH_STAR		"\/\*"
+STAR_SLASH		"\*\/"
 
 %%
 
@@ -227,7 +285,6 @@ MULTICHAR_LITERAL		'[{NON_BACKSLASH}|{SPECIAL_CHARACTER}]{2,}'
 <CONST_CHAR_LITERAL>{
 
 	{SINGLE_QUOTE}	{
-
                         cout<<"Inside state yytext: "<<yytext<<endl;
 						current_const_char_text += yytext;
 						current_converted_text += yytext;
@@ -237,11 +294,13 @@ MULTICHAR_LITERAL		'[{NON_BACKSLASH}|{SPECIAL_CHARACTER}]{2,}'
 					}
 	{NEWLINE}	{
 					print_error_message("UNFINISHED_CONST_CHAR",current_const_char_text);
+					cout<<"NewLIne error"<<endl;
 					line_count++;
 					BEGIN INITIAL;
 				}
 	<<EOF>>		{
 					print_error_message("UNFINISHED_CONST_CHAR",current_const_char_text);
+					cout<<"EOF error"<<endl;
 					BEGIN INITIAL;
 				}
 	{SPECIAL_CHARACTER}	{
@@ -250,7 +309,7 @@ MULTICHAR_LITERAL		'[{NON_BACKSLASH}|{SPECIAL_CHARACTER}]{2,}'
 							current_converted_text += get_special_character_ASCII(yytext);
                             cout<<"special converted "<<current_converted_text<<endl;
 						}
-	\\{NON_BACKSLASH}	{
+	{BACKSLASH}{NON_BACKSLASH}	{
                             cout<<"Inside \\ non-back yytext: "<<yytext<<endl;
 							current_const_char_text += yytext;
 							current_converted_text += get_special_character_ASCII(yytext);
@@ -261,6 +320,91 @@ MULTICHAR_LITERAL		'[{NON_BACKSLASH}|{SPECIAL_CHARACTER}]{2,}'
 						current_const_char_text += yytext;
 						current_converted_text += yytext;
                         cout<<"Inside non-back current_const_char: "<<current_const_char_text<<endl;
+					}
+}
+
+
+{DOUBLE_QUOTE}  {
+					current_string=yytext;
+					BEGIN STRING_LITERAL;
+				}
+
+<STRING_LITERAL>{
+
+	{DOUBLE_QUOTE}	{
+						current_string+=yytext;
+						process_token_lexeme(TokenLexeme("STRING",current_string));
+						BEGIN INITIAL;
+					}
+	{NEWLINE}		{
+						print_error_message("Unfinished string for new line :",current_string);
+						line_count++;
+						BEGIN INITIAL;
+					}
+	<<EOF>>			{
+						print_error_message("Unfinished string for EOF :",current_string);
+						BEGIN INITIAL;
+					}
+	{SPECIAL_CHARACTER}	{
+						current_string+=get_special_character_ASCII(yytext);
+						cout<<"Special conversion "<< current_string<<endl;
+					}
+	{BACKSLASH}{NEWLINE}			{
+						current_string += yytext;
+						line_count++;
+					}
+	.				{
+						current_string+=yytext;
+					}
+}
+
+{DOUBLE_SLASH}	{
+					current_comment=yytext;
+					BEGIN DOUBLE_SLASH_COMMENT;
+				}
+
+<DOUBLE_SLASH_COMMENT>{
+
+	{NEWLINE}	{
+					line_count++;
+					process_double_slash_comment();
+					BEGIN INITIAL;
+				}
+	<<EOF>>		{
+					process_double_slash_comment();
+					BEGIN INITIAL;
+				}
+	{BACKSLASH}{NEWLINE}	{
+								current_comment+=yytext;
+								line_count++;
+							}
+	.			{
+					current_comment+=yytext;
+
+				}
+}
+
+{SLASH_STAR}	{
+					current_comment=yytext;
+					BEGIN SLASH_STAR_COMMENT;
+				}
+
+<SLASH_STAR_COMMENT>{
+
+	{STAR_SLASH}	{
+						current_comment+=yytext;
+						process_slash_star_comment();
+						BEGIN INITIAL;
+					}
+	{NEWLINE}		{
+						current_comment+=yytext;
+						line_count++;
+					}
+	<<EOF>>			{
+						print_error_message("COMMENT UNFINISHED",current_comment);
+					}
+	.				{
+						current_comment+=yytext;
 					}
 }
 
@@ -285,6 +429,7 @@ int main(int argc, char *argv[]) {
     yylex();
 
     logout << "Total lines: " << line_count << endl;
+	logout << "Total errors: "<<error_count<<endl;
 
     delete ST; // prevent memory leak
 
