@@ -1,0 +1,12 @@
+1. SetUp                            -->Done
+2. Program header and footer        -->Done
+3. Data : Constants                 -->Done
+4. Data : Global variables          -->Done
+5. Data : local variables(stack)    -->Done
+5. Data : Array variables           -->Done
+6. Expression : Assingn operation   -->InProgress
+7. Expression : add operation       -->Todo
+8. Expression : mul operation       -->Todo
+9. Expression : unary operation     -->Todo
+10. Expression : rel operation      -->Todo
+11. Expression : Logical operation  -->Todo

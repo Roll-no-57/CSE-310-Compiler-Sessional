@@ -1,0 +1,14 @@
+struct Car {
+    int speed;
+    int wheel;
+};
+
+
+
+int main(){
+
+
+    struct Car car1,car2,car3;
+
+    return 0;
+}
